@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lights Out 7x7</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2c3e50;
+            color: white;
+            margin: 0;
+            padding-bottom: 50px;
+        }
+
+        /* Style paska nawigacyjnego */
+        nav {
+            width: 100%;
+            background-color: #1a252f;
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #34495e;
+            transition: background-color 0.2s;
+        }
+
+        nav a:hover {
+            background-color: #2980b9;
+        }
+
+        nav a.active {
+            background-color: #3498db;
+        }
+
+        /* Reszta stylów bez zmian */
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            grid-gap: 5px;
+            margin-bottom: 25px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #34495e;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .cell.on {
+            background-color: #f1c40f;
+            box-shadow: 0 0 12px #f1c40f;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .instructions {
+            margin-top: 40px;
+            max-width: 500px;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            font-size: 20px;
+            color: #ecf0f1;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            color: #bdc3c7;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="active">Strona główna</a>
+    </nav>
+
+    <h1>Lights Out 7x7</h1>
+    <p>Kliknij pole, aby zmienić stan jego i jego sąsiadów. Zgaś wszystkie światła!</p>
+    
+    <div id="grid"></div>
+    <button onclick="initGame()">Losuj nową grę</button>
+
+    <div class="instructions">
+        <h2>Jak w to grać?</h2>
+        <ul>
+            <li><strong>Cel:</strong> Twoim zadaniem jest zgaszenie wszystkich świateł (żółtych pól) na planszy.</li>
+            <li><strong>Mechanika:</strong> Kiedy klikniesz w dowolne pole, zmieni ono swój stan na przeciwny (jeśli świeciło, to zgaśnie; jeśli było zgaszone, to się zapali).</li>
+            <li><strong>Haczyk:</strong> Kliknięcie zmienia stan nie tylko tego jednego kafelka, ale również <strong>czterech pól bezpośrednio z nim sąsiadujących</strong> (w górę, w dół, w lewo i w prawo).</li>
+        </ul>
+    </div>
+
+    <script>
+        const size = 7;
+        const gridElement = document.getElementById('grid');
+        let state = [];
+
+        function initGame() {
+            gridElement.innerHTML = '';
+            // Tworzenie pustej tablicy 7x7 (wszystko zgaszone)
+            state = Array(size).fill().map(() => Array(size).fill(false));
+
+            // Budowanie siatki w HTML
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = () => handleCellClick(r, c);
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            // Mieszanie planszy symulowanymi kliknięciami, 
+            // aby mieć pewność, że układ jest zawsze możliwy do rozwiązania
+            for (let i = 0; i < 40; i++) {
+                const randomRow = Math.floor(Math.random() * size);
+                const randomCol = Math.floor(Math.random() * size);
+                toggle(randomRow, randomCol);
+            }
+            updateView();
+        }
+
+        function handleCellClick(r, c) {
+            toggle(r, c);
+            updateView();
+            checkWin();
+        }
+
+        function toggle(r, c) {
+            // [r, c] to środek, reszta to góra, dół, lewo, prawo
+            const directions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+            
+            for (let [dr, dc] of directions) {
+                const nr = r + dr;
+                const nc = c + dc;
+                // Sprawdzamy czy pole nie wychodzi poza planszę
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                    state[nr][nc] = !state[nr][nc];
+                }
+            }
+        }
+
+        function updateView() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                if (state[r][c]) {
+                    cell.classList.add('on');
+                } else {
+                    cell.classList.remove('on');
+                }
+            });
+        }
+
+        function checkWin() {
+            // Sprawdza, czy w tablicy zostało jakiekolwiek zapalone światło (true)
+            const hasOn = state.some(row => row.some(cellValue => cellValue === true));
+            if (!hasOn) {
+                // Opóźnienie alertu, aby kolor ostatniego klikniętego kafelka zdążył się zaktualizować
+                setTimeout(() => {
+                    alert("Gratulacje! Wszystkie światła zostały zgaszone!");
+                }, 50);
+            }
+        }
+
+        // Uruchomienie gry po załadowaniu skryptu
+        initGame();
+    </script>
+</body>
+</html>
