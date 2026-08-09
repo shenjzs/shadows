@@ -179,11 +179,11 @@
         .target {
             position: absolute;
             height: 100%;
-            background-color: #0d0d12;
-            border-left: 2px solid rgba(255,255,255,0.1);
-            border-right: 2px solid rgba(255,255,255,0.1);
+            background-color: #630026; /* Przywrócony ciemniejszy różowy */
+            border-left: 2px solid rgba(0,0,0,0.5);
+            border-right: 2px solid rgba(0,0,0,0.5);
             box-sizing: border-box;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
         }
 
         #cursor {
@@ -347,8 +347,8 @@
     <div class="instructions">
         <h3>Instrukcja systemowa</h3>
         <p><strong>Mechanika:</strong> Twój wskaźnik znajduje się na dole ekranu. Z góry przesuwają się laserowe linie z bezpiecznymi lukami.</p>
-        <p><strong>Sterowanie:</strong> Używaj strzałek <strong>LEWO / PRAWO</strong> (lub klawiszy <strong>A / D</strong>), aby kierować wskaźnikiem i celować w zaciemnione luki na nadjeżdżających belkach.</p>
-        <p><strong>Uwaga:</strong> Wskaźnik "pływa" na boki (znoszenie), więc musisz go cały czas kontrować ruchem! Przepuść bezpiecznie wszystkie belki, aby złamać zabezpieczenia.</p>
+        <p><strong>Sterowanie:</strong> Używaj strzałek <strong>LEWO / PRAWO</strong> (lub klawiszy <strong>A / D</strong>), aby kierować wskaźnikiem i celować w ciemniejsze luki na nadjeżdżających belkach.</p>
+        <p><strong>Uwaga:</strong> Wskaźnik "pływa" na boki (znoszenie), więc musisz go cały czas kontrować ruchem! <strong>Przetrwaj do końca czasu</strong>, unikając uderzenia w laser, aby zaliczyć rundę.</p>
     </div>
 
     <script>
@@ -377,14 +377,13 @@
         let tracks = [];
         let speedY = 80; 
         let targetWidth = 150; 
-        let passedTracks = 0;
-        let totalTracksToPass = 2;
+        let trackDistance = 150; // Odstęp między generowanymi belkami
 
         let keys = { left: false, right: false };
         
         let lastTime = 0;
         let timeRemaining = 0;
-        let maxTime = 15000;
+        let maxTimeCurrent = 15000;
         let animationFrameId;
 
         document.addEventListener('keydown', (e) => {
@@ -405,6 +404,29 @@
             actionBtn.disabled = true;
             actionBtn.innerText = "Łamanie Zabezpieczeń...";
         }
+        
+        function spawnTrack(startY) {
+            let trackDOM = document.createElement('div');
+            trackDOM.classList.add('track');
+            
+            let targetDOM = document.createElement('div');
+            targetDOM.classList.add('target');
+            
+            let gapX = Math.random() * (BOARD_WIDTH - targetWidth - 40) + 20;
+
+            targetDOM.style.left = gapX + 'px';
+            targetDOM.style.width = targetWidth + 'px';
+            trackDOM.appendChild(targetDOM);
+            board.appendChild(trackDOM);
+
+            tracks.push({
+                y: startY,
+                h: 12,
+                gapX: gapX,
+                gapW: targetWidth,
+                el: trackDOM
+            });
+        }
 
         function setupRound() {
             speedY = 60 + (currentRound * 15);
@@ -421,36 +443,13 @@
             driftDir = Math.random() > 0.5 ? 1 : -1;
             keys.left = false;
             keys.right = false;
-            passedTracks = 0;
-            totalTracksToPass = 2; 
 
+            // Czyścimy stare paski
             document.querySelectorAll('.track').forEach(t => t.remove());
             tracks = [];
 
-            for(let i = 0; i < totalTracksToPass; i++) {
-                let trackDOM = document.createElement('div');
-                trackDOM.classList.add('track');
-                
-                let targetDOM = document.createElement('div');
-                targetDOM.classList.add('target');
-                
-                let gapX = Math.random() * (BOARD_WIDTH - targetWidth - 40) + 20;
-                let startY = -50 - (i * 150); 
-
-                targetDOM.style.left = gapX + 'px';
-                targetDOM.style.width = targetWidth + 'px';
-                trackDOM.appendChild(targetDOM);
-                board.appendChild(trackDOM);
-
-                tracks.push({
-                    y: startY,
-                    h: 12,
-                    gapX: gapX,
-                    gapW: targetWidth,
-                    el: trackDOM,
-                    passed: false
-                });
-            }
+            // Generujemy pierwszą belkę
+            spawnTrack(-50);
             
             updateCursorDOM();
             
@@ -468,6 +467,26 @@
             lastTime = timestamp;
             if (dt > 0.1) dt = 0.016; 
 
+            // Zmniejszanie czasu
+            timeRemaining -= (dt * 1000);
+            timerFill.style.width = Math.max(0, (timeRemaining / maxTimeCurrent * 100)) + '%';
+
+            // Zwycięstwo, gdy czas się skończy
+            if (timeRemaining <= 0) {
+                isPlaying = false;
+                cancelAnimationFrame(animationFrameId);
+                cursor.style.transform = "rotate(0deg)";
+                
+                if (currentRound < MAX_ROUNDS) {
+                    currentRound++;
+                    setTimeout(setupRound, 500);
+                } else {
+                    endGame(true);
+                }
+                return;
+            }
+
+            // Ruch strzałki
             xPos += driftDir * driftSpeed * dt;
             if (xPos >= BOARD_WIDTH - 10) {
                 xPos = BOARD_WIDTH - 10;
@@ -486,7 +505,8 @@
 
             updateCursorDOM();
 
-            for (let i = 0; i < tracks.length; i++) {
+            // Pętla od tyłu, żeby bezpiecznie usuwać elementy z tablicy
+            for (let i = tracks.length - 1; i >= 0; i--) {
                 let track = tracks[i];
                 track.y += speedY * dt;
                 track.el.style.top = track.y + 'px';
@@ -496,6 +516,7 @@
                 let cursorTop = cursorY;
                 let cursorBottom = cursorY + 16;
                 
+                // Sprawdzanie kolizji
                 if (trackBottom > cursorTop && trackTop < cursorBottom) {
                     let cursorLeft = xPos - 8;
                     let cursorRight = xPos + 8;
@@ -508,31 +529,17 @@
                     }
                 }
 
-                if (!track.passed && trackTop > cursorBottom) {
-                    track.passed = true;
-                    passedTracks++;
+                // Usuwanie belek, które wyleciały poza ekran
+                if (trackTop > BOARD_HEIGHT) {
+                    track.el.remove();
+                    tracks.splice(i, 1);
                 }
             }
 
-            timeRemaining -= (dt * 1000);
-            if (timeRemaining <= 0) {
-                endGame(false);
-                return;
-            }
-            timerFill.style.width = (timeRemaining / maxTimeCurrent * 100) + '%';
-
-            if (passedTracks === totalTracksToPass) {
-                isPlaying = false;
-                cancelAnimationFrame(animationFrameId);
-                cursor.style.transform = "rotate(0deg)";
-                
-                if (currentRound < MAX_ROUNDS) {
-                    currentRound++;
-                    setTimeout(setupRound, 500);
-                } else {
-                    endGame(true);
-                }
-                return;
+            // Generowanie nowych belek (nieskończony strumień, póki jest czas)
+            let lastTrack = tracks[tracks.length - 1];
+            if (lastTrack && lastTrack.y >= (trackDistance - 50)) {
+                spawnTrack(-50);
             }
 
             animationFrameId = requestAnimationFrame(gameLoop);
