@@ -1,118 +1,201 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kafelki - Minigra</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
         body, html {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #111116; /* Ciemne tło główne */
-            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-            color: #ccc;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d0d12;
+            color: white;
+            position: relative;
+            overflow-x: hidden;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            overflow: hidden;
         }
 
+        /* Dekoracyjne rozmyte plamy w tle (fioletowy motyw Kantor) */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before { top: -150px; left: -100px; background: rgba(157, 0, 255, 0.12); }
+        body::after { bottom: -200px; right: -100px; background: rgba(255, 0, 136, 0.12); }
+
+        /* Szklany pasek nawigacyjny */
+        nav {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 25px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-color: rgba(157, 0, 255, 0.4);
+        }
+
+        /* Główny kontener gry - Glassmorphism */
         .game-container {
-            width: 550px;
-            background-color: #171720; /* Tło panelu gry */
-            border-radius: 8px;
-            padding: 25px 35px 45px 35px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
         }
 
         .header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            width: 100%;
+            justify-content: center;
         }
 
         .icon {
-            width: 34px;
-            height: 34px;
-            background: linear-gradient(135deg, #301f2e, #201721);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ff0055;
-            font-size: 18px;
-            box-shadow: inset 0 0 5px rgba(255, 0, 85, 0.2);
+            background: rgba(157, 0, 255, 0.1);
+            border: 1px solid rgba(157, 0, 255, 0.3);
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 20px;
+            box-shadow: 0 0 10px rgba(157, 0, 255, 0.2);
         }
 
         h1 {
-            color: #ff0055;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 26px;
+            font-weight: 700;
             margin: 0;
+            letter-spacing: -0.5px;
+            background-image: linear-gradient(90deg, #9d00ff, #ff0088);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(157, 0, 255, 0.3));
         }
 
         .subtitle {
             font-size: 14px;
-            color: #a0a0b0;
-            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 25px;
+            text-align: center;
         }
 
         .stats {
             display: flex;
             justify-content: center;
-            gap: 50px;
+            gap: 40px;
             margin-bottom: 25px;
             text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .stat-label {
-            font-size: 13px;
-            color: #a0a0b0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
             margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .stat-value {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
-            color: #ff0055;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(157, 0, 255, 0.5);
         }
 
         .board {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 10px;
             width: 320px;
-            margin: 0 auto 35px auto;
+            margin: 0 auto 30px auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 15px rgba(0,0,0,0.5);
         }
 
         .tile {
             width: 100%;
             aspect-ratio: 1/1;
-            background: linear-gradient(180deg, #1f1422, #18101a);
-            border: 2px solid #ff0055;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
-            color: #ff0055;
+            color: white;
             cursor: pointer;
             user-select: none;
-            transition: transform 0.1s ease, background-color 0.2s;
-            box-sizing: border-box;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .tile:hover {
-            background: #2a1624;
-            transform: scale(0.98);
+            background: rgba(157, 0, 255, 0.2);
+            border-color: rgba(157, 0, 255, 0.5);
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.3);
+            color: #df99ff;
         }
 
         .tile.empty {
@@ -125,53 +208,56 @@
         .tile.empty:hover {
             transform: none;
             background: transparent;
+            color: transparent;
         }
 
         .footer {
             text-align: center;
             font-size: 13px;
-            color: #6a6a7a;
+            color: rgba(255, 255, 255, 0.5);
             line-height: 1.8;
+            margin-bottom: 10px;
         }
 
         .key-hint {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #332b35;
-            border-radius: 4px;
+            border: 1px solid rgba(157, 0, 255, 0.4);
+            border-radius: 6px;
             padding: 2px 8px;
             margin-right: 6px;
-            color: #ff0055;
-            background-color: #201721;
+            color: #df99ff;
+            background-color: rgba(157, 0, 255, 0.1);
             font-size: 14px;
             letter-spacing: 2px;
         }
 
         .progress-bar-container {
             width: 100%;
-            height: 4px;
-            background-color: #22222a;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
             position: absolute;
             bottom: 0;
             left: 0;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
             overflow: hidden;
         }
 
         .progress-bar {
             height: 100%;
             width: 100%;
-            background-color: #ff0055;
+            background-color: #9d00ff;
+            box-shadow: 0 0 10px #9d00ff;
             transition: width 1s linear;
         }
 
-        /* --- Style dla własnego okienka powiadomień (Modal) --- */
+        /* Szklane okienko powiadomień (Modal) */
         .custom-alert-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(13, 13, 18, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -185,15 +271,16 @@
         }
 
         .custom-alert-box {
-            background-color: #171720;
-            border: 1px solid #332b35;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.9);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
             transform: translateY(-20px) scale(0.95);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             min-width: 320px;
+            backdrop-filter: blur(25px);
         }
 
         .custom-alert-overlay.show .custom-alert-box {
@@ -203,53 +290,57 @@
         .custom-alert-icon {
             font-size: 45px;
             margin-bottom: 15px;
+            filter: drop-shadow(0 0 15px rgba(157, 0, 255, 0.5));
         }
 
         .custom-alert-title {
-            color: #ff0055;
-            font-size: 24px;
+            color: #9d00ff;
+            font-size: 26px;
             font-weight: 700;
             margin: 0 0 10px 0;
+            text-shadow: 0 0 10px rgba(157, 0, 255, 0.3);
         }
 
         .custom-alert-message {
-            color: #a0a0b0;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 15px;
             margin-bottom: 30px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .custom-alert-btn {
-            background: linear-gradient(135deg, #301f2e, #201721);
-            color: #ff0055;
-            border: 1px solid rgba(255, 0, 85, 0.3);
+            background: linear-gradient(135deg, #9d00ff, #ff0088);
+            color: white;
+            border: none;
             padding: 12px 35px;
-            border-radius: 6px;
+            border-radius: 12px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: inherit;
             letter-spacing: 1px;
             text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4);
         }
 
         .custom-alert-btn:hover {
-            background: #2a1624;
-            border-color: #ff0055;
-            box-shadow: 0 0 15px rgba(255, 0, 85, 0.2);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(157, 0, 255, 0.6);
         }
     </style>
 </head>
 <body>
+
+    <nav>
+        <a href="index.html">Powrót do menu</a>
+    </nav>
 
     <div class="game-container">
         <div class="header">
             <div class="icon">🎮</div>
             <h1>Kafelki</h1>
         </div>
-        <div class="subtitle">Ustaw kafelki w odpowiedniej kolejności.</div>
+        <div class="subtitle">Złóż kod dostępu w odpowiedniej kolejności.</div>
 
         <div class="stats">
             <div>
@@ -258,10 +349,10 @@
             </div>
             <div>
                 <div class="stat-label">Ruchy</div>
-                <div class="stat-value" id="moves">147</div>
+                <div class="stat-value" id="moves">0</div>
             </div>
             <div>
-                <div class="stat-label">Rozmiar</div>
+                <div class="stat-label">System</div>
                 <div class="stat-value">4×4</div>
             </div>
         </div>
@@ -271,8 +362,8 @@
         </div>
 
         <div class="footer">
-            <div><span class="key-hint">↔↕</span> Przesuń kafelki za pomocą strzałek</div>
-            <div>Kliknij sąsiednie kafelki, aby je przesunąć</div>
+            <div><span class="key-hint">↔↕</span> Użyj strzałek na klawiaturze</div>
+            <div>Lub klikaj w wybrane moduły, aby je przesuwać.</div>
         </div>
 
         <div class="progress-bar-container">
@@ -280,13 +371,13 @@
         </div>
     </div>
 
-    <!-- Struktura własnego powiadomienia (Modal) -->
+    <!-- Szklane powiadomienie (Modal) -->
     <div id="custom-alert" class="custom-alert-overlay" style="display: none;">
         <div class="custom-alert-box">
             <div class="custom-alert-icon" id="alert-icon">🏆</div>
             <h2 class="custom-alert-title" id="alert-title">Sukces!</h2>
             <p class="custom-alert-message" id="alert-message">Ułożono w 0 ruchach.<br>Czas: 0s</p>
-            <button class="custom-alert-btn" onclick="closeAlert()">Zrozumiałem</button>
+            <button class="custom-alert-btn" onclick="closeAlert()">Kontynuuj</button>
         </div>
     </div>
 
@@ -318,12 +409,10 @@
             startTimer();
         }
 
-        // Algorytm tasowania (wykonuje losowe prawidłowe ruchy, by gra zawsze była do przejścia)
         function shuffleBoard() {
             let previousEmpty = -1;
             for (let i = 0; i < 300; i++) {
                 const validMoves = getValidMoves();
-                // Opcjonalnie: unikaj cofania się od razu do poprzedniego stanu, aby lepiej przemieszać
                 const filteredMoves = validMoves.filter(move => move !== previousEmpty);
                 const nextMove = filteredMoves.length > 0 
                     ? filteredMoves[Math.floor(Math.random() * filteredMoves.length)] 
@@ -339,10 +428,10 @@
             const row = Math.floor(emptyIndex / 4);
             const col = emptyIndex % 4;
 
-            if (row > 0) moves.push(emptyIndex - 4); // Góra
-            if (row < 3) moves.push(emptyIndex + 4); // Dół
-            if (col > 0) moves.push(emptyIndex - 1); // Lewo
-            if (col < 3) moves.push(emptyIndex + 1); // Prawo
+            if (row > 0) moves.push(emptyIndex - 4); 
+            if (row < 3) moves.push(emptyIndex + 4); 
+            if (col > 0) moves.push(emptyIndex - 1); 
+            if (col < 3) moves.push(emptyIndex + 1); 
 
             return moves;
         }
@@ -372,7 +461,6 @@
             const col = emptyIndex % 4;
             let targetIndex = -1;
 
-            // Zależnie od implementacji - zwykle strzałka w górę przesuwa PŁYTKĘ z dołu na puste pole wyżej
             switch(e.key) {
                 case 'ArrowUp':
                     if (row < 3) targetIndex = emptyIndex + 4;
@@ -447,7 +535,6 @@
             }
         }
 
-        // --- Logika własnego powiadomienia (Modal) ---
         function showAlert(title, message, isSuccess) {
             const overlay = document.getElementById('custom-alert');
             const titleEl = document.getElementById('alert-title');
@@ -458,15 +545,16 @@
             messageEl.innerHTML = message;
             
             if (isSuccess) {
-                titleEl.style.color = '#ff0055';
-                iconEl.textContent = '🏆';
+                titleEl.style.color = '#9d00ff';
+                titleEl.style.textShadow = '0 0 10px rgba(157, 0, 255, 0.3)';
+                iconEl.textContent = '🔓';
             } else {
-                titleEl.style.color = '#a0a0b0';
-                iconEl.textContent = '⏳';
+                titleEl.style.color = '#ff0055';
+                titleEl.style.textShadow = '0 0 10px rgba(255, 0, 85, 0.3)';
+                iconEl.textContent = '🔒';
             }
 
             overlay.style.display = 'flex';
-            // Wymuszenie odświeżenia przez przeglądarkę, żeby animacja CSS zadziałała
             void overlay.offsetWidth; 
             overlay.classList.add('show');
         }
@@ -478,8 +566,7 @@
                 overlay.style.display = 'none';
             }, 300);
             
-            // Opcjonalnie odkomentuj, żeby resetować grę po kliknięciu "Zrozumiałem"
-            // initGame(); 
+            // initGame(); // Opcjonalny reset
         }
 
         function endGame(isWin) {
@@ -487,15 +574,13 @@
             clearInterval(timer);
             setTimeout(() => {
                 if (isWin) {
-                    // Miejsce na Twój webhook
-                    showAlert('Sukces!', `Ułożono w ${moves} ruchach.<br>Czas: ${totalTime - timeLeft}s`, true);
+                    showAlert('SYSTEM ZŁAMANY!', `Zabezpieczenia ominięte w ${moves} ruchach.<br>Pozostały czas: ${timeLeft}s`, true);
                 } else {
-                    showAlert('Koniec gry', 'Czas minął!<br>Nie udało się ułożyć układanki.', false);
+                    showAlert('ODRZUCONO', 'Czas na złamanie zabezpieczeń minął!<br>Dostęp zablokowany.', false);
                 }
             }, 150);
         }
 
-        // Nasłuchiwanie klawiszy
         window.addEventListener('keydown', (e) => {
             if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
                 e.preventDefault(); 
@@ -503,7 +588,6 @@
             }
         });
 
-        // Uruchomienie skryptu po załadowaniu
         initGame();
     </script>
 </body>
