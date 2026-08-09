@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafelki - Minigra</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111116; /* Ciemne tło główne */
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            color: #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 550px;
+            background-color: #171720; /* Tło panelu gry */
+            border-radius: 8px;
+            padding: 25px 35px 45px 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #301f2e, #201721);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ff0055;
+            font-size: 18px;
+            box-shadow: inset 0 0 5px rgba(255, 0, 85, 0.2);
+        }
+
+        h1 {
+            color: #ff0055;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #a0a0b0;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #a0a0b0;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff0055;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 320px;
+            margin: 0 auto 35px auto;
+        }
+
+        .tile {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: linear-gradient(180deg, #1f1422, #18101a);
+            border: 2px solid #ff0055;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ff0055;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease, background-color 0.2s;
+            box-sizing: border-box;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .tile:hover {
+            background: #2a1624;
+            transform: scale(0.98);
+        }
+
+        .tile.empty {
+            border: none;
+            background: transparent;
+            cursor: default;
+            box-shadow: none;
+        }
+        
+        .tile.empty:hover {
+            transform: none;
+            background: transparent;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            color: #6a6a7a;
+            line-height: 1.8;
+        }
+
+        .key-hint {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #332b35;
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin-right: 6px;
+            color: #ff0055;
+            background-color: #201721;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background-color: #22222a;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #ff0055;
+            transition: width 1s linear;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="header">
+            <div class="icon">🎮</div>
+            <h1>Kafelki</h1>
+        </div>
+        <div class="subtitle">Ustaw kafelki w odpowiedniej kolejności.</div>
+
+        <div class="stats">
+            <div>
+                <div class="stat-label">Czas</div>
+                <div class="stat-value" id="time">180s</div>
+            </div>
+            <div>
+                <div class="stat-label">Ruchy</div>
+                <div class="stat-value" id="moves">147</div>
+            </div>
+            <div>
+                <div class="stat-label">Rozmiar</div>
+                <div class="stat-value">4×4</div>
+            </div>
+        </div>
+
+        <div class="board" id="board">
+            <!-- Pola generowane przez JavaScript -->
+        </div>
+
+        <div class="footer">
+            <div><span class="key-hint">↔↕</span> Przesuń kafelki za pomocą strzałek</div>
+            <div>Kliknij sąsiednie kafelki, aby je przesunąć</div>
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const movesElement = document.getElementById('moves');
+        const timeElement = document.getElementById('time');
+        const progressBar = document.getElementById('progress-bar');
+        
+        let tiles = [];
+        let emptyIndex = 15;
+        let moves = 0;
+        const totalTime = 180;
+        let timeLeft = totalTime;
+        let timer;
+        let gameActive = false;
+
+        function initGame() {
+            tiles = [...Array(15).keys()].map(x => x + 1);
+            tiles.push(0); 
+            emptyIndex = 15;
+            moves = 0;
+            timeLeft = totalTime;
+            gameActive = true;
+            
+            shuffleBoard();
+            updateStats();
+            renderBoard();
+            startTimer();
+        }
+
+        // Algorytm tasowania (wykonuje losowe prawidłowe ruchy, by gra zawsze była do przejścia)
+        function shuffleBoard() {
+            let previousEmpty = -1;
+            for (let i = 0; i < 300; i++) {
+                const validMoves = getValidMoves();
+                // Opcjonalnie: unikaj cofania się od razu do poprzedniego stanu, aby lepiej przemieszać
+                const filteredMoves = validMoves.filter(move => move !== previousEmpty);
+                const nextMove = filteredMoves.length > 0 
+                    ? filteredMoves[Math.floor(Math.random() * filteredMoves.length)] 
+                    : validMoves[Math.floor(Math.random() * validMoves.length)];
+                
+                previousEmpty = emptyIndex;
+                swap(emptyIndex, nextMove);
+            }
+        }
+
+        function getValidMoves() {
+            const moves = [];
+            const row = Math.floor(emptyIndex / 4);
+            const col = emptyIndex % 4;
+
+            if (row > 0) moves.push(emptyIndex - 4); // Góra
+            if (row < 3) moves.push(emptyIndex + 4); // Dół
+            if (col > 0) moves.push(emptyIndex - 1); // Lewo
+            if (col < 3) moves.push(emptyIndex + 1); // Prawo
+
+            return moves;
+        }
+
+        function swap(index1, index2) {
+            [tiles[index1], tiles[index2]] = [tiles[index2], tiles[index1]];
+            emptyIndex = index2;
+        }
+
+        function handleTileClick(index) {
+            if (!gameActive) return;
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            const emptyRow = Math.floor(emptyIndex / 4);
+            const emptyCol = emptyIndex % 4;
+
+            if ((Math.abs(row - emptyRow) === 1 && col === emptyCol) || 
+                (Math.abs(col - emptyCol) === 1 && row === emptyRow)) {
+                swap(emptyIndex, index);
+                registerMove();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (!gameActive) return;
+            const row = Math.floor(emptyIndex / 4);
+            const col = emptyIndex % 4;
+            let targetIndex = -1;
+
+            // Zależnie od implementacji - zwykle strzałka w górę przesuwa PŁYTKĘ z dołu na puste pole wyżej
+            switch(e.key) {
+                case 'ArrowUp':
+                    if (row < 3) targetIndex = emptyIndex + 4;
+                    break;
+                case 'ArrowDown':
+                    if (row > 0) targetIndex = emptyIndex - 4;
+                    break;
+                case 'ArrowLeft':
+                    if (col < 3) targetIndex = emptyIndex + 1;
+                    break;
+                case 'ArrowRight':
+                    if (col > 0) targetIndex = emptyIndex - 1;
+                    break;
+            }
+
+            if (targetIndex !== -1) {
+                swap(emptyIndex, targetIndex);
+                registerMove();
+            }
+        }
+
+        function registerMove() {
+            moves++;
+            updateStats();
+            renderBoard();
+            checkWin();
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            tiles.forEach((number, index) => {
+                const tile = document.createElement('div');
+                if (number === 0) {
+                    tile.className = 'tile empty';
+                } else {
+                    tile.className = 'tile';
+                    tile.textContent = number;
+                    tile.onclick = () => handleTileClick(index);
+                }
+                boardElement.appendChild(tile);
+            });
+        }
+
+        function updateStats() {
+            movesElement.textContent = moves;
+            timeElement.textContent = `${timeLeft}s`;
+            const percentage = (timeLeft / totalTime) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                updateStats();
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function checkWin() {
+            let isWin = true;
+            for (let i = 0; i < 14; i++) {
+                if (tiles[i] !== i + 1) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin && tiles[15] === 0) {
+                endGame(true);
+            }
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            clearInterval(timer);
+            setTimeout(() => {
+                if (isWin) {
+                    // Miejsce na Twój webhook/post request
+                    alert(`Sukces! Ułożono w ${moves} ruchach. Czas: ${totalTime - timeLeft}s`);
+                } else {
+                    alert('Czas minął! Nie udało się ułożyć układanki.');
+                }
+                // Opcjonalny reset:
+                // initGame();
+            }, 150);
+        }
+
+        // Nasłuchiwanie klawiszy
+        window.addEventListener('keydown', (e) => {
+            if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+                e.preventDefault(); 
+                handleKeyPress(e);
+            }
+        });
+
+        // Uruchomienie skryptu po załadowaniu
+        initGame();
+    </script>
+</body>
+</html>

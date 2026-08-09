@@ -66,6 +66,7 @@
         .panel-2 { background: linear-gradient(to bottom, rgba(255,234,0,0.05), transparent); }
         .panel-3 { background: linear-gradient(to bottom, rgba(255,0,127,0.05), transparent); }
         .panel-4 { background: linear-gradient(to bottom, rgba(0,255,85,0.05), transparent); }
+        .panel-5 { background: linear-gradient(to bottom, rgba(157,0,255,0.05), transparent); } /* Nowy gradient dla Kantoru */
 
         .logo {
             font-size: 40px;
@@ -123,6 +124,10 @@
         /* Panel 4 - Zielony (offbeat styl) */
         .panel-4 .logo { color: #00ff55; }
         .panel-4 .bottom-line { background-color: #00ff55; box-shadow: 0 0 12px #00ff55; }
+
+        /* Panel 5 - Fioletowy (dodany Kantor) */
+        .panel-5 .logo { color: #9d00ff; }
+        .panel-5 .bottom-line { background-color: #9d00ff; box-shadow: 0 0 12px #9d00ff; }
 
         /* Wygląd zablokowanych opcji */
         .disabled-panel {
@@ -220,6 +225,17 @@
         <a href="jacht.html" class="panel panel-4">
             <div class="grid-overlay"></div>
             <div class="logo">Jacht</div>
+            
+            <div class="action-area">
+                <div class="bottom-line"></div>
+                <div class="action-text">WYBIERZ GRĘ</div>
+            </div>
+        </a>
+
+        <!-- Dodany panel dla Kantoru -->
+        <a href="kantor.html" class="panel panel-5">
+            <div class="grid-overlay"></div>
+            <div class="logo">Kantor</div>
             
             <div class="action-area">
                 <div class="bottom-line"></div>
