@@ -195,30 +195,148 @@
             border-color: #666;
         }
 
-        /* Legenda na mapie */
-        #mapLegend {
+        /* Prawy panel boczny z listą blipów (Styl GTA V) */
+        #sidebarPanel {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            max-height: calc(100vh - 40px);
             background: var(--bg-panel);
             border: 1px solid var(--gold-secondary);
-            padding: 15px 20px;
             border-radius: 4px;
             z-index: 800;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 10px var(--gold-glow) inset;
             backdrop-filter: blur(5px);
-            pointer-events: none; /* Żeby nie blokowało klikania w mapę, jeśli nie chcemy z nią interakcji */
+            display: flex;
+            flex-direction: column;
         }
 
-        #mapLegend h3 {
-            margin: 0 0 12px 0;
+        .sidebar-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--gold-secondary);
+        }
+
+        .sidebar-header h3 {
+            margin: 0 0 10px 0;
             color: var(--gold-primary);
             font-family: 'Cinzel', serif;
             font-size: 14px;
             letter-spacing: 2px;
             text-transform: uppercase;
+        }
+
+        #blipSearchInput {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            color: var(--text-light);
+            border: 1px solid #333;
+            outline: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        #blipSearchInput:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 8px var(--gold-glow);
+        }
+
+        #blipSearchInput::placeholder {
+            color: #555;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            max-height: calc(100vh - 140px);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(122, 99, 63, 0.2);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(176, 141, 87, 0.1);
+        }
+
+        .sidebar-item-info {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .sidebar-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--bg-dark);
+            border: 2px solid var(--c);
+            box-shadow: 0 0 6px var(--c);
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-delete-btn {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+            padding: 0 4px;
+        }
+
+        .sidebar-delete-btn:hover {
+            color: #ff4444;
+        }
+
+        /* Legenda na mapie (przeniesiona niżej pod listę lub obok) */
+        #mapLegend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: var(--bg-panel);
+            border: 1px solid var(--gold-secondary);
+            padding: 12px 18px;
+            border-radius: 4px;
+            z-index: 800;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 10px var(--gold-glow) inset;
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+        }
+
+        #mapLegend h3 {
+            margin: 0 0 8px 0;
+            color: var(--gold-primary);
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             border-bottom: 1px solid #333;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
 
         #mapLegend ul {
@@ -230,8 +348,8 @@
         #mapLegend li {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
-            font-size: 12px;
+            margin-bottom: 6px;
+            font-size: 11px;
             color: var(--text-light);
             letter-spacing: 0.5px;
         }
@@ -242,13 +360,13 @@
 
         #mapLegend li span {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background-color: var(--bg-dark);
             border: 2px solid var(--c);
-            box-shadow: 0 0 8px var(--c);
-            margin-right: 12px;
+            box-shadow: 0 0 6px var(--c);
+            margin-right: 10px;
         }
 
         /* Stylowanie popupów Leaflet na mapie */
@@ -336,6 +454,17 @@
 
     <div id="map"></div>
     
+    <!-- Prawy Panel Boczny (Lista Blipów + Wyszukiwarka) -->
+    <div id="sidebarPanel">
+        <div class="sidebar-header">
+            <h3>Lista Punktów</h3>
+            <input type="text" id="blipSearchInput" placeholder="Szukaj blipa..." autocomplete="off">
+        </div>
+        <ul class="sidebar-list" id="sidebarBlipsList">
+            <!-- Tutaj dynamicznie wpadają punkty -->
+        </ul>
+    </div>
+
     <!-- Legenda Mapy -->
     <div id="mapLegend">
         <h3>Legenda</h3>
@@ -406,11 +535,8 @@
         const imageUrl = 'https://www.bragitoff.com/wp-content/uploads/2015/11/GTAV_ATLUS_2048x2048.png';
         L.imageOverlay(imageUrl, bounds).addTo(map);
         
-        map.fitBounds(bounds);
-
-        window.addEventListener('resize', function() {
-            map.fitBounds(bounds);
-        });
+        // Ustawienie widoku początkowego mapy
+        map.setView([5200, 4096], -2);
 
         // Elementy interfejsu
         const modal = document.getElementById('blipModal');
@@ -419,11 +545,15 @@
         const descInput = document.getElementById('blipDesc');
         const saveBtn = document.getElementById('saveBlipBtn');
         const cancelBtn = document.getElementById('cancelBlipBtn');
+        const searchInput = document.getElementById('blipSearchInput');
+        const sidebarList = document.getElementById('sidebarBlipsList');
 
         let currentCoordinates = null;
 
         // Inicjalizacja tablicy blipów z LocalStorage (pamięci przeglądarki)
         let savedBlips = JSON.parse(localStorage.getItem('gtaMapBlips')) || [];
+        // Tablica przechowująca referencje do obiektów markerów na mapie
+        let markerReferences = [];
 
         // Funkcja generująca niestandardową ikonę w zależności od wybranego koloru
         function getCustomIcon(color) {
@@ -438,14 +568,68 @@
             });
         }
 
+        // Renderowanie listy w panelu bocznym
+        function renderSidebar(filterText = '') {
+            sidebarList.innerHTML = '';
+            
+            savedBlips.forEach((blip, index) => {
+                if (filterText && !blip.title.toLowerCase().includes(filterText.toLowerCase())) {
+                    return;
+                }
+
+                const blipColor = blip.color || '#b08d57';
+
+                const li = document.createElement('li');
+                li.className = 'sidebar-item';
+                
+                li.innerHTML = `
+                    <div class="sidebar-item-info" style="flex: 1;">
+                        <span class="sidebar-dot" style="--c: ${blipColor};"></span>
+                        <span class="sidebar-title" title="${blip.title}">${blip.title}</span>
+                    </div>
+                    <button class="sidebar-delete-btn" title="Usuń punkt">&times;</button>
+                `;
+
+                // Kliknięcie w element listy -> centrowanie mapy na blipie i otwarcie popupu
+                li.querySelector('.sidebar-item-info').onclick = function() {
+                    map.setView([blip.coords.lat, blip.coords.lng], 0);
+                    if (markerReferences[index]) {
+                        markerReferences[index].openPopup();
+                    }
+                };
+
+                // Kliknięcie w krzyżyk -> usunięcie blipa
+                li.querySelector('.sidebar-delete-btn').onclick = function(e) {
+                    e.stopPropagation();
+                    deleteBlip(index);
+                };
+
+                sidebarList.appendChild(li);
+            });
+        }
+
+        // Funkcja usuwająca blip
+        function deleteBlip(index) {
+            // Usuń marker z mapy
+            if (markerReferences[index]) {
+                map.removeLayer(markerReferences[index]);
+            }
+            
+            // Usuń z tablic i zapisu
+            savedBlips.splice(index, 1);
+            markerReferences.splice(index, 1);
+            localStorage.setItem('gtaMapBlips', JSON.stringify(savedBlips));
+            
+            // Odśwież listę boczną
+            renderSidebar(searchInput.value);
+        }
+
         // Funkcja renderująca blip na mapie
-        function renderBlip(coords, title, desc, color) {
-            // Domyślny złoty kolor, jeśli blip był zapisany wcześniej bez zdefiniowanego koloru
+        function renderBlip(coords, title, desc, color, index) {
             const blipColor = color || '#b08d57'; 
             
             const marker = L.marker([coords.lat, coords.lng], {icon: getCustomIcon(blipColor)}).addTo(map);
             
-            // Kolorowanie tytułu w dymku na podstawie koloru blipa
             const popupHTML = `
                 <div>
                     <h3 style="color: ${blipColor}; border-bottom-color: ${blipColor};">${title}</h3>
@@ -453,12 +637,25 @@
                 </div>
             `;
             marker.bindPopup(popupHTML);
+            
+            markerReferences[index] = marker;
         }
 
-        // Renderowanie zapisanych blipów po załadowaniu strony
-        savedBlips.forEach(blip => {
-            renderBlip(blip.coords, blip.title, blip.desc, blip.color);
-        });
+        // Inicjalne ładowanie blipów na mapę i do panelu
+        function loadAllBlips() {
+            markerReferences = [];
+            savedBlips.forEach((blip, index) => {
+                renderBlip(blip.coords, blip.title, blip.desc, blip.color, index);
+            });
+            renderSidebar();
+        }
+
+        loadAllBlips();
+
+        // Wyszukiwarka na żywo w panelu
+        searchInput.oninput = function() {
+            renderSidebar(searchInput.value);
+        };
 
         // Funkcja zamykająca modal
         function closeModal() {
@@ -475,7 +672,6 @@
             titleInput.value = '';
             descInput.value = '';
             
-            // Resetowanie wybranego koloru do domyślnego (złotego)
             document.getElementById('c_gold').checked = true;
             
             titleInput.focus();
@@ -492,7 +688,6 @@
                 const desc = descInput.value.trim() || 'Brak danych operacyjnych.';
                 const selectedColor = document.querySelector('input[name="blipColor"]:checked').value;
                 
-                // Zapisywanie do tablicy
                 const newBlip = {
                     coords: currentCoordinates,
                     title: title,
@@ -501,12 +696,10 @@
                 };
                 
                 savedBlips.push(newBlip);
-                
-                // Aktualizacja w LocalStorage
                 localStorage.setItem('gtaMapBlips', JSON.stringify(savedBlips));
 
-                // Renderowanie na mapie
-                renderBlip(currentCoordinates, title, desc, selectedColor);
+                // Ponowne załadowanie wszystkich (najprostszy sposób na zachowanie spójnych indeksów)
+                loadAllBlips();
                 
                 closeModal();
             }
