@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wybór Minigry - Kantor</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d0d12;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Dekoracyjne rozmyte plamy w tle */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before {
+            top: -150px;
+            left: -100px;
+            background: rgba(157, 0, 255, 0.15);
+        }
+        body::after {
+            bottom: -200px;
+            right: -100px;
+            background: rgba(0, 229, 255, 0.15);
+        }
+
+        /* Przycisk powrotu */
+        .back-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 10;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 25px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-color: rgba(157, 0, 255, 0.4);
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            padding: 40px;
+            width: 100%;
+            height: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Styl Liquid Glass / Glassmorphism dla paneli */
+        .panel {
+            flex: 1;
+            height: 60%;
+            max-height: 450px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            text-decoration: none;
+            color: white;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            opacity: 0.5;
+        }
+
+        .panel:hover {
+            transform: translateY(-10px); 
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Nowe, dopasowane do designu numerki */
+        .panel-number {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            font-size: 24px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.15);
+            z-index: 5;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            letter-spacing: 2px;
+        }
+
+        .panel-2:hover .panel-number { /* Styl dla matematyki przy najechniu */
+            color: #00e5ff;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+            transform: scale(1.1);
+        }
+
+        .panel-1:hover .panel-number { /* Styl dla kafelków przy najechaniu */
+            color: #9d00ff;
+            text-shadow: 0 0 15px rgba(157, 0, 255, 0.6);
+            transform: scale(1.1);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 8px 8px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        .logo {
+            font-size: 38px;
+            font-weight: 700;
+            text-align: center;
+            z-index: 2;
+            letter-spacing: -0.5px;
+            transition: transform 0.3s ease;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+
+        .panel:hover .logo {
+            transform: scale(1.05);
+        }
+
+        .heist-desc {
+            font-size: 15px;
+            font-weight: 500;
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+            z-index: 2;
+            text-align: center;
+            transition: color 0.3s ease, transform 0.3s ease;
+            padding: 0 20px;
+        }
+
+        .panel:hover .heist-desc {
+            color: rgba(255, 255, 255, 0.9); 
+            transform: scale(1.05);
+        }
+
+        .action-area {
+            position: absolute;
+            bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .bottom-line {
+            width: 40px; 
+            height: 4px;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            background-color: white;
+            opacity: 0.5;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .panel:hover .bottom-line {
+            width: 120px;
+            opacity: 1;
+        }
+
+        .action-text {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+        }
+
+        .panel:hover .action-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Kolory kafelków */
+        .panel-1 { background: linear-gradient(180deg, rgba(157,0,255,0.02) 0%, transparent 100%); }
+        .panel-1:hover { border-color: rgba(157, 0, 255, 0.4); box-shadow: 0 15px 35px rgba(157, 0, 255, 0.15); }
+        .panel-1 .logo { background-image: linear-gradient(90deg, #9d00ff, #ff0088); }
+        .panel-1 .bottom-line { background-color: #9d00ff; box-shadow: 0 0 15px #9d00ff; }
+
+        .panel-2 { background: linear-gradient(180deg, rgba(0,229,255,0.02) 0%, transparent 100%); }
+        .panel-2:hover { border-color: rgba(0, 229, 255, 0.4); box-shadow: 0 15px 35px rgba(0, 229, 255, 0.15); }
+        .panel-2 .logo { background-image: linear-gradient(90deg, #00e5ff, #0077ff); }
+        .panel-2 .bottom-line { background-color: #00e5ff; box-shadow: 0 0 15px #00e5ff; }
+
+    </style>
+</head>
+<body>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
+
+    <a href="index.html" class="back-btn">← Powrót do menu</a>
+
+    <div class="container">
+        <!-- Opcja 1: Matematyka -->
+        <a href="kantor_matma.html" class="panel panel-2">
+            <div class="panel-number">01</div>
+            <div class="grid-overlay"></div>
+            <div class="logo">Matematyka</div>
+            <div class="heist-desc">Wskaż czy równanie jest większe, mniejsze lub równe.</div>
+            
+            <div class="action-area">
+                <div class="bottom-line"></div>
+                <div class="action-text">ROZPOCZNIJ</div>
+            </div>
+        </a>
+
+        <!-- Opcja 2: Kafelki -->
+        <a href="kantor_kafelki.html" class="panel panel-1">
+            <div class="panel-number">02</div>
+            <div class="grid-overlay"></div>
+            <div class="logo">Kafelki</div>
+            <div class="heist-desc">Ułóż kafelki w kolejności od 1 - 15.</div>
+            
+            <div class="action-area">
+                <div class="bottom-line"></div>
+                <div class="action-text">ROZPOCZNIJ</div>
+            </div>
+        </a>
+    </div>
+
+</body>
+</html>

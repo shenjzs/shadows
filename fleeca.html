@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleeca - Wkrótce</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d0d12;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Dekoracyjne rozmyte plamy w tle - czerwony motyw Fleeca */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before {
+            top: -150px;
+            left: -100px;
+            background: rgba(255, 0, 60, 0.15); /* Czerwony główny */
+        }
+        body::after {
+            bottom: -200px;
+            right: -100px;
+            background: rgba(157, 0, 255, 0.08); /* Delikatny fiolet dla kontrastu */
+        }
+
+        /* Przycisk powrotu */
+        .back-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 10;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 25px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-color: rgba(255, 0, 60, 0.5); /* Czerwony przy najechaniu */
+        }
+
+        /* Panel "Wkrótce" */
+        .coming-soon-panel {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 30px;
+            padding: 60px 80px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            max-width: 500px;
+            width: 85%;
+            overflow: hidden;
+            border-bottom: 2px solid rgba(255, 0, 60, 0.3); /* Delikatny akcent na dole */
+        }
+
+        .coming-soon-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 60, 0.6), transparent);
+            opacity: 0.8;
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 8px 8px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 0 15px rgba(255, 0, 60, 0.5));
+            animation: pulse 2s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        .title {
+            font-size: 42px;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            z-index: 2;
+            position: relative;
+            letter-spacing: -1px;
+            background-image: linear-gradient(90deg, #ff003c, #ff5577);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(255, 0, 60, 0.3));
+        }
+
+        .desc {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin: 0 0 35px 0;
+            position: relative;
+            z-index: 2;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .desc span {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            width: 30%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff003c, #ff5577);
+            border-radius: 10px;
+            box-shadow: 0 0 15px #ff003c;
+            animation: loading 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 0, 60, 0.4)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 25px rgba(255, 0, 60, 0.8)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 0, 60, 0.4)); }
+        }
+
+        @keyframes loading {
+            0% { width: 10%; margin-left: -10%; }
+            50% { width: 40%; }
+            100% { width: 10%; margin-left: 100%; }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Weryfikacja sesji z index.html -->
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
+
+    <a href="index.html" class="back-btn">← Powrót do menu</a>
+
+    <div class="coming-soon-panel">
+        <div class="grid-overlay"></div>
+        <div class="icon">🔒</div>
+        <h1 class="title">Fleeca Bank</h1>
+        <p class="desc">System zabezpieczeń bankowych jest w trakcie <span>deszyfracji</span>...<br>Moduł napadu będzie dostępny wkrótce.</p>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
+</body>
+</html>

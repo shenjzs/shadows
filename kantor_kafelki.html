@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafelki - Minigra</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d0d12;
+            color: white;
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Dekoracyjne rozmyte plamy w tle (fioletowy motyw Kantor) */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before { top: -150px; left: -100px; background: rgba(157, 0, 255, 0.12); }
+        body::after { bottom: -200px; right: -100px; background: rgba(255, 0, 136, 0.12); }
+
+        /* Szklany pasek nawigacyjny */
+        nav {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 25px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-color: rgba(157, 0, 255, 0.4);
+        }
+
+        /* Główny kontener gry - Glassmorphism */
+        .game-container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .icon {
+            background: rgba(157, 0, 255, 0.1);
+            border: 1px solid rgba(157, 0, 255, 0.3);
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 20px;
+            box-shadow: 0 0 10px rgba(157, 0, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+            background-image: linear-gradient(90deg, #9d00ff, #ff0088);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(157, 0, 255, 0.3));
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 25px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(157, 0, 255, 0.5);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 320px;
+            margin: 0 auto 30px auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 15px rgba(0,0,0,0.5);
+        }
+
+        .tile {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .tile:hover {
+            background: rgba(157, 0, 255, 0.2);
+            border-color: rgba(157, 0, 255, 0.5);
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.3);
+            color: #df99ff;
+        }
+
+        .tile.empty {
+            border: none;
+            background: transparent;
+            cursor: default;
+            box-shadow: none;
+        }
+        
+        .tile.empty:hover {
+            transform: none;
+            background: transparent;
+            color: transparent;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .key-hint {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(157, 0, 255, 0.4);
+            border-radius: 6px;
+            padding: 2px 8px;
+            margin-right: 6px;
+            color: #df99ff;
+            background-color: rgba(157, 0, 255, 0.1);
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #9d00ff;
+            box-shadow: 0 0 10px #9d00ff;
+            transition: width 1s linear;
+        }
+
+        /* Szklane okienko powiadomień (Modal) */
+        .custom-alert-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(13, 13, 18, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .custom-alert-overlay.show {
+            opacity: 1;
+        }
+
+        .custom-alert-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+            transform: translateY(-20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 320px;
+            backdrop-filter: blur(25px);
+        }
+
+        .custom-alert-overlay.show .custom-alert-box {
+            transform: translateY(0) scale(1);
+        }
+
+        .custom-alert-icon {
+            font-size: 45px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 15px rgba(157, 0, 255, 0.5));
+        }
+
+        .custom-alert-title {
+            color: #9d00ff;
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px rgba(157, 0, 255, 0.3);
+        }
+
+        .custom-alert-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .custom-alert-btn {
+            background: linear-gradient(135deg, #9d00ff, #ff0088);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4);
+        }
+
+        .custom-alert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(157, 0, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Powrót do menu</a>
+    </nav>
+
+    <div class="game-container">
+        <div class="header">
+            <div class="icon">🎮</div>
+            <h1>Kafelki</h1>
+        </div>
+        <div class="subtitle">Złóż kod dostępu w odpowiedniej kolejności.</div>
+
+        <div class="stats">
+            <div>
+                <div class="stat-label">Czas</div>
+                <div class="stat-value" id="time">180s</div>
+            </div>
+            <div>
+                <div class="stat-label">Ruchy</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div>
+                <div class="stat-label">System</div>
+                <div class="stat-value">4×4</div>
+            </div>
+        </div>
+
+        <div class="board" id="board">
+            <!-- Pola generowane przez JavaScript -->
+        </div>
+
+        <div class="footer">
+            <div><span class="key-hint">↔↕</span> Użyj strzałek na klawiaturze</div>
+            <div>Lub klikaj w wybrane moduły, aby je przesuwać.</div>
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Szklane powiadomienie (Modal) -->
+    <div id="custom-alert" class="custom-alert-overlay" style="display: none;">
+        <div class="custom-alert-box">
+            <div class="custom-alert-icon" id="alert-icon">🏆</div>
+            <h2 class="custom-alert-title" id="alert-title">Sukces!</h2>
+            <p class="custom-alert-message" id="alert-message">Ułożono w 0 ruchach.<br>Czas: 0s</p>
+            <button class="custom-alert-btn" onclick="closeAlert()">Kontynuuj</button>
+        </div>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const movesElement = document.getElementById('moves');
+        const timeElement = document.getElementById('time');
+        const progressBar = document.getElementById('progress-bar');
+        
+        let tiles = [];
+        let emptyIndex = 15;
+        let moves = 0;
+        const totalTime = 180;
+        let timeLeft = totalTime;
+        let timer;
+        let gameActive = false;
+
+        function initGame() {
+            tiles = [...Array(15).keys()].map(x => x + 1);
+            tiles.push(0); 
+            emptyIndex = 15;
+            moves = 0;
+            timeLeft = totalTime;
+            gameActive = true;
+            
+            shuffleBoard();
+            updateStats();
+            renderBoard();
+            startTimer();
+        }
+
+        function shuffleBoard() {
+            let previousEmpty = -1;
+            for (let i = 0; i < 300; i++) {
+                const validMoves = getValidMoves();
+                const filteredMoves = validMoves.filter(move => move !== previousEmpty);
+                const nextMove = filteredMoves.length > 0 
+                    ? filteredMoves[Math.floor(Math.random() * filteredMoves.length)] 
+                    : validMoves[Math.floor(Math.random() * validMoves.length)];
+                
+                previousEmpty = emptyIndex;
+                swap(emptyIndex, nextMove);
+            }
+        }
+
+        function getValidMoves() {
+            const moves = [];
+            const row = Math.floor(emptyIndex / 4);
+            const col = emptyIndex % 4;
+
+            if (row > 0) moves.push(emptyIndex - 4); 
+            if (row < 3) moves.push(emptyIndex + 4); 
+            if (col > 0) moves.push(emptyIndex - 1); 
+            if (col < 3) moves.push(emptyIndex + 1); 
+
+            return moves;
+        }
+
+        function swap(index1, index2) {
+            [tiles[index1], tiles[index2]] = [tiles[index2], tiles[index1]];
+            emptyIndex = index2;
+        }
+
+        function handleTileClick(index) {
+            if (!gameActive) return;
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            const emptyRow = Math.floor(emptyIndex / 4);
+            const emptyCol = emptyIndex % 4;
+
+            if ((Math.abs(row - emptyRow) === 1 && col === emptyCol) || 
+                (Math.abs(col - emptyCol) === 1 && row === emptyRow)) {
+                swap(emptyIndex, index);
+                registerMove();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (!gameActive) return;
+            const row = Math.floor(emptyIndex / 4);
+            const col = emptyIndex % 4;
+            let targetIndex = -1;
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    if (row < 3) targetIndex = emptyIndex + 4;
+                    break;
+                case 'ArrowDown':
+                    if (row > 0) targetIndex = emptyIndex - 4;
+                    break;
+                case 'ArrowLeft':
+                    if (col < 3) targetIndex = emptyIndex + 1;
+                    break;
+                case 'ArrowRight':
+                    if (col > 0) targetIndex = emptyIndex - 1;
+                    break;
+            }
+
+            if (targetIndex !== -1) {
+                swap(emptyIndex, targetIndex);
+                registerMove();
+            }
+        }
+
+        function registerMove() {
+            moves++;
+            updateStats();
+            renderBoard();
+            checkWin();
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            tiles.forEach((number, index) => {
+                const tile = document.createElement('div');
+                if (number === 0) {
+                    tile.className = 'tile empty';
+                } else {
+                    tile.className = 'tile';
+                    tile.textContent = number;
+                    tile.onclick = () => handleTileClick(index);
+                }
+                boardElement.appendChild(tile);
+            });
+        }
+
+        function updateStats() {
+            movesElement.textContent = moves;
+            timeElement.textContent = `${timeLeft}s`;
+            const percentage = (timeLeft / totalTime) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                updateStats();
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function checkWin() {
+            let isWin = true;
+            for (let i = 0; i < 14; i++) {
+                if (tiles[i] !== i + 1) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin && tiles[15] === 0) {
+                endGame(true);
+            }
+        }
+
+        function showAlert(title, message, isSuccess) {
+            const overlay = document.getElementById('custom-alert');
+            const titleEl = document.getElementById('alert-title');
+            const messageEl = document.getElementById('alert-message');
+            const iconEl = document.getElementById('alert-icon');
+            
+            titleEl.textContent = title;
+            messageEl.innerHTML = message;
+            
+            if (isSuccess) {
+                titleEl.style.color = '#9d00ff';
+                titleEl.style.textShadow = '0 0 10px rgba(157, 0, 255, 0.3)';
+                iconEl.textContent = '🔓';
+            } else {
+                titleEl.style.color = '#ff0055';
+                titleEl.style.textShadow = '0 0 10px rgba(255, 0, 85, 0.3)';
+                iconEl.textContent = '🔒';
+            }
+
+            overlay.style.display = 'flex';
+            void overlay.offsetWidth; 
+            overlay.classList.add('show');
+        }
+
+        function closeAlert() {
+            const overlay = document.getElementById('custom-alert');
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+            
+            // initGame(); // Opcjonalny reset
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            clearInterval(timer);
+            setTimeout(() => {
+                if (isWin) {
+                    showAlert('SYSTEM ZŁAMANY!', `Zabezpieczenia ominięte w ${moves} ruchach.<br>Pozostały czas: ${timeLeft}s`, true);
+                } else {
+                    showAlert('ODRZUCONO', 'Czas na złamanie zabezpieczeń minął!<br>Dostęp zablokowany.', false);
+                }
+            }, 150);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+                e.preventDefault(); 
+                handleKeyPress(e);
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
